@@ -1,0 +1,1 @@
+worker: python evaluar_ia_bot.py
