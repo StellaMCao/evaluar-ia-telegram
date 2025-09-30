@@ -324,17 +324,47 @@ async def echo(update: Update, context) -> None:
         reply_markup=build_keyboard(CONTENT['start']['buttons'])
     )
 
+import os # <--- ¡Asegúrate de que esta línea esté al inicio, junto a las otras importaciones!
+# ...
+# ... (el resto de tu código)
+# ...
+
 def main() -> None:
-    """Inicia el bot."""
+    """Configura el bot para usar Webhooks y lo ejecuta como un servidor en Render."""
+    
+    # Render proporciona el puerto y el hostname como variables de entorno
+    # Usamos 5000 como valor por defecto si no lo encuentra (aunque en Render siempre estará)
+    PORT = int(os.environ.get('PORT', 5000)) 
+    WEBHOOK_URL_BASE = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+
+    # La ruta secreta (usamos el TOKEN para que sea difícil de adivinar y único)
+    WEBHOOK_PATH = TOKEN 
+
+    if not WEBHOOK_URL_BASE:
+         logger.error("RENDER_EXTERNAL_HOSTNAME no está disponible. No se puede configurar el webhook.")
+         return 
+
+    # Construir la URL completa que Telegram usará (ej: https://[tu_hostname]/[tu_token])
+    WEBHOOK_URL = f"https://{WEBHOOK_URL_BASE}/{WEBHOOK_PATH}"
+
     application = Application.builder().token(TOKEN).build()
 
+    # Configuración de Handlers (igual que en tu código original)
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    # -------------------------------------------------------------------------
+    # --- CAMBIO CLAVE: Usar Webhook en lugar de Polling ---
+    # Esto inicia el servidor HTTP que Render espera.
+    # -------------------------------------------------------------------------
+    application.run_webhook(
+        listen="0.0.0.0",  # Escucha en todas las interfaces (CRUCIAL para Render)
+        port=PORT,         # Usa el puerto que Render nos asignó
+        url_path=WEBHOOK_PATH,
+        webhook_url=WEBHOOK_URL
+    )
 
 if __name__ == '__main__':
-
     main()
 
