@@ -9,7 +9,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- Reemplaza 'YOUR_TELEGRAM_BOT_TOKEN' con el TOKEN que te dio BotFather ---
-TOKEN = "8322802813:AAEx69jqAxt5RUJ878H2-ja0Kdd34liRKAw"
+import os
+TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 # -----------------------------------------------------------------------------
 
 # Diccionario de contenido para el chatbot
@@ -333,4 +334,5 @@ def main() -> None:
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
+
     main()
